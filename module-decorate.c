@@ -6,19 +6,32 @@
 #include "log.h"
 #include "module-decorate.h"
 
-static struct {
+enum Colors {
+    COLOR_BLACK = 30,
+    COLOR_RED = 31,
+    COLOR_GREEN = 32,
+    COLOR_YELLOW = 33,
+    COLOR_BLUE = 34,
+    COLOR_MAGNETA = 35,
+    COLOR_CYAN = 36,
+    COLOR_LIGHT_GRAY = 37,
+    COLOR_DEFAULT = 39
+};
+
+MODULE_PRIVATE
+struct {
     const char *name;
     int code;
 } table[] = {
-    {"black", 30},
-    {"red", 31},
-    {"green", 32},
-    {"yellow", 33},
-    {"blue", 34},
-    {"magneta", 35},
-    {"cyan", 36},
-    {"light grey", 37},
-    {"default", 39}
+    {"black", COLOR_BLACK},
+    {"red", COLOR_RED},
+    {"green", COLOR_GREEN},
+    {"yellow", COLOR_YELLOW},
+    {"blue", COLOR_BLUE},
+    {"magneta", COLOR_MAGNETA},
+    {"cyan", COLOR_CYAN},
+    {"light gray", COLOR_LIGHT_GRAY},
+    {"default", COLOR_DEFAULT}
 };
 
 struct Decoration {
@@ -55,12 +68,16 @@ int loadConfig(struct Module *module, const struct Config *cfg, const char *sect
         underline = 1;
     }
 
-    int colorCode = 39;
+    int colorCode = 0;
     for (size_t i = 0; i != sizeof(table)/sizeof(*table); ++i) {
         if (!strcmp(color, table[i].name)) {
             colorCode = table[i].code;
             break;
         }
+    }
+    if (!colorCode) {
+        LOG(L_WARN, "Requested color '%s' is not available, using color = default", color);
+        colorCode = COLOR_DEFAULT;
     }
     size_t maxPrefixLength = strlen("\x1B[1;4;xxm") + 1;
     char *prefix = (char *)malloc(maxPrefixLength);
@@ -163,7 +180,6 @@ void moduleDecorate(struct Module *module) {
         LOG(L_FATAL, "Allocation failed (%zu bytes)", sizeof(struct Decoration));
         return;
     }
-
 
     module->privateData = decoration;
     module->name = "decorate";
