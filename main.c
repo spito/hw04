@@ -7,6 +7,7 @@
 #include "config.h"
 #include "module-cache.h"
 #include "module-toupper.h"
+#include "module-decorate.h"
 
 
 void process(const char *queryText, struct Module *modules, int modulesCount) {
@@ -51,6 +52,7 @@ void process(const char *queryText, struct Module *modules, int modulesCount) {
     }
     LOG(L_DEBUG, "responseCode: %i", query.responseCode);
     if (query.responseCode == RC_SUCCESS || query.responseCode == RC_NO_RESPONSE) {
+        m = modulesCount;
         while (--m >= 0) {
             if (modules[m].postProcess) {
                 LOG(L_DEBUG, "Postprocessing by %s", modules[m].name);
@@ -59,7 +61,7 @@ void process(const char *queryText, struct Module *modules, int modulesCount) {
         }
     }
     LOG(L_INFO, "response: %s", query.response);
-    //printf("query: %s\nresponse: %s\n", query.query, query.response);
+    printf("query: %s\nresponse: %s\n", query.query, query.response);
 
     if (query.responseCleanup)
         query.responseCleanup(&query);
@@ -136,7 +138,7 @@ void processFile(const char *file,
         LOG(L_ERROR, "Cannot open file '%s'", file);
         return;
     }
-    char line[64 + 1] = {};
+    char line[64 + 1] = {0};
 
     for (int i = 1; fgets(line, 64, input); ++i) {
         
@@ -144,12 +146,8 @@ void processFile(const char *file,
             *end = '\0';
         }
 
-
         LOG(L_DEBUG, "line: '%s'", line);
         process(line, modules, modulesCount);
-        // if (i % 10 == 0) {
-        //     sleep(1);
-        // }
     }
     fclose(input);
 }
@@ -168,11 +166,12 @@ int main(int argc, char **argv) {
     const char *configFile = "server.conf";
     int rv;
 
-    size_t modulesCount = 2;
+    int modulesCount = 3;
 
-    struct Module modules[2];
+    struct Module modules[3];
     moduleCache(&modules[0]);
     moduleToUpper(&modules[1]);
+    moduleDecorate(&modules[2]);
     //moduleToLower(&modules[2]);
 
     if ((rv = loadConfig(configFile, modules, modulesCount))) {

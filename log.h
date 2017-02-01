@@ -20,6 +20,6 @@ int logFunction(const char *file,
                  enum LogCodes code,
                  const char *fmt, ...);
 
-#define LOG(CODE, FMT, ...) logFunction(__FILE__, __LINE__, CODE, FMT, ##__VA_ARGS__)
+#define LOG(CODE, ...) logFunction(__FILE__, __LINE__, CODE, ##__VA_ARGS__)
 
 #endif

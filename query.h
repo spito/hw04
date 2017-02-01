@@ -17,12 +17,12 @@ struct Query {
 
     const char *query;
     size_t queryLength;
-    cleanupFn queryCleanup;
+    queryCleanupFn queryCleanup;
 
     char *response;
     size_t responseLength;
     enum ResponseCode responseCode;
-    cleanupFn responseCleanup;
+    queryCleanupFn responseCleanup;
 
 
 };

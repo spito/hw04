@@ -29,9 +29,7 @@ struct Cache {
 };
 
 MODULE_PRIVATE
-void responseCleanup(void *q) {
-    struct Query *query = (struct Query *)q;
-
+void responseCleanup(struct Query *query) {
     free(query->response);
     query->response = NULL;
     query->responseLength = 0;
@@ -110,6 +108,11 @@ struct CacheItem *find(struct Cache *cache, const char *key) {
 MODULE_PRIVATE
 void process(struct Module *module, struct Query *query) {
     struct Cache *cache = (struct Cache *)module->privateData;
+    if (!cache) {
+        query->responseCode = RC_ERROR;
+        return;
+    }
+
     struct CacheItem *item = find(cache, query->query);
     if (!item) {
         query->responseCode = RC_CONTINUE;
@@ -131,6 +134,10 @@ void process(struct Module *module, struct Query *query) {
 MODULE_PRIVATE
 void postProcess(struct Module *module, struct Query *query) {
     struct Cache *cache = (struct Cache *)module->privateData;
+    if (!cache) {
+        query->responseCode = RC_ERROR;
+        return;
+    }
     struct CacheItem *item = find(cache, query->query);
 
     if (!item) {
@@ -174,8 +181,7 @@ void postProcess(struct Module *module, struct Query *query) {
 
 
 MODULE_PRIVATE
-void cleanup(void *m) {
-    struct Module *module = (struct Module *)m;
+void cleanup(struct Module *module) {
     if (!module)
         return;
     struct Cache *cache = (struct Cache *)module->privateData;

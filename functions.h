@@ -4,12 +4,12 @@
 #include "config.h"
 #include "query.h"
 
-typedef void(*cleanupFn)(void*);
-
 struct Module;
 struct Query;
+
+typedef void(*queryCleanupFn)(struct Query *);
+typedef void(*moduleCleanupFn)(struct Module *);
 typedef int(*loadConfigFn)(struct Module *, const struct Config *, const char *);
 typedef void(*processFn)(struct Module *, struct Query *);
-
 
 #endif

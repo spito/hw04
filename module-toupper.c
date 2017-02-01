@@ -6,9 +6,7 @@
 #include "module-toupper.h"
 
 MODULE_PRIVATE
-void responseCleanup(void *q) {
-    struct Query *query = (struct Query *)q;
-
+void responseCleanup(struct Query *query) {
     free(query->response);
     query->response = NULL;
     query->responseLength = 0;

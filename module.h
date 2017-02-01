@@ -17,7 +17,7 @@ struct Module {
     processFn process;
     processFn postProcess;
 
-    cleanupFn cleanup;
+    moduleCleanupFn cleanup;
 
 };
 

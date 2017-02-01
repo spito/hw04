@@ -42,7 +42,7 @@ int logFunction(const char *file,
                 size_t line,
                 enum LogCodes code,
                 const char *fmt, ...) {
-    if (code < logMask || code == L_NO_LOG)
+    if ((int)code < logMask || code == L_NO_LOG)
         return 1;
     if (!logStream)
         logStream = stderr;
