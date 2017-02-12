@@ -8,25 +8,29 @@
 
 static const char *logFile = NULL;
 static FILE *logStream = NULL;
-static int logMask = L_INFO;
+static int logMask = LInfo;
 
-void logClose() {
+void logClose()
+{
     fclose(logStream);
 }
 
-int setLogMask(int mask) {
-    if (mask < L_DEBUG || mask > L_NO_LOG)
+int setLogMask(int mask)
+{
+    if (mask < LDebug || mask > LNoLog)
         return -1;
 
     logMask = mask;
     return 0;
 }
 
-int setLogFile(const char *file) {
-    if (!logFile)
+int setLogFile(const char *file)
+{
+    if (!logFile) {
         atexit(logClose);
-    else
+    } else {
         fclose(logStream);
+    }
 
     logFile = file;
     logStream = fopen(logFile, "a");
@@ -40,12 +44,15 @@ int setLogFile(const char *file) {
 
 int logFunction(const char *file,
                 size_t line,
-                enum LogCodes code,
-                const char *fmt, ...) {
-    if ((int)code < logMask || code == L_NO_LOG)
+                enum logCodes code,
+                const char *fmt, ...)
+{
+    if ((int)code < logMask || code == LNoLog) {
         return 1;
-    if (!logStream)
+    }
+    if (!logStream) {
         logStream = stderr;
+    }
 
     struct timeval now;
     gettimeofday(&now, NULL);
@@ -64,11 +71,11 @@ int logFunction(const char *file,
  
     const char *kind;
     switch (code) {
-    case L_DEBUG:   kind = "D"; break;
-    case L_INFO:    kind = "I"; break;
-    case L_WARN:    kind = "W"; break;
-    case L_ERROR:   kind = "E"; break;
-    case L_FATAL:   kind = "F"; break;
+    case LDebug:   kind = "D"; break;
+    case LInfo:    kind = "I"; break;
+    case LWarn:    kind = "W"; break;
+    case LError:   kind = "E"; break;
+    case LFatal:   kind = "F"; break;
     default:        kind = "?"; break;
     }
 

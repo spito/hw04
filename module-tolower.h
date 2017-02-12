@@ -3,6 +3,6 @@
 
 #include "module.h"
 
-void moduleToLower(struct Module *);
+void moduleToLower(struct module *);
 
 #endif

@@ -1,15 +1,16 @@
 #include "config.h"
 
-int configReader(struct Config *cfg, const char *name) {
+int configReader(struct config *cfg, const char *name)
+{
     /// TODO: implement
     return 0;
 }
 
 
-int configValue(const struct Config *cfg,
+int configValue(const struct config *cfg,
                 const char *section,
                 const char *key,
-                enum ConfigValueType type,
+                enum configValueType type,
                 void *value)
 {
     /// TODO: implement
@@ -17,6 +18,7 @@ int configValue(const struct Config *cfg,
 }
 
 
-void configCleaner(struct Config *cfg) {
+void configCleaner(struct config *cfg)
+{
     /// TODO: implement
 }

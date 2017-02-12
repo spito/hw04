@@ -3,6 +3,6 @@
 
 #include "module.h"
 
-void moduleCache(struct Module *);
+void moduleCache(struct module *);
 
 #endif

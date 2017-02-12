@@ -6,16 +6,16 @@
 #include "log.h"
 #include "module-decorate.h"
 
-enum Colors {
-    COLOR_BLACK = 30,
-    COLOR_RED = 31,
-    COLOR_GREEN = 32,
-    COLOR_YELLOW = 33,
-    COLOR_BLUE = 34,
-    COLOR_MAGNETA = 35,
-    COLOR_CYAN = 36,
-    COLOR_LIGHT_GRAY = 37,
-    COLOR_DEFAULT = 39
+enum colors {
+    ColorBlack = 30,
+    ColorRed = 31,
+    ColorGreen = 32,
+    ColorYellow = 33,
+    ColorBlue = 34,
+    ColorMagneta = 35,
+    ColorCyan = 36,
+    ColorLightGray = 37,
+    ColorDefault = 39
 };
 
 MODULE_PRIVATE
@@ -23,18 +23,18 @@ struct {
     const char *name;
     int code;
 } table[] = {
-    {"black", COLOR_BLACK},
-    {"red", COLOR_RED},
-    {"green", COLOR_GREEN},
-    {"yellow", COLOR_YELLOW},
-    {"blue", COLOR_BLUE},
-    {"magneta", COLOR_MAGNETA},
-    {"cyan", COLOR_CYAN},
-    {"light gray", COLOR_LIGHT_GRAY},
-    {"default", COLOR_DEFAULT}
+    {"black", ColorBlack},
+    {"red", ColorRed},
+    {"green", ColorGreen},
+    {"yellow", ColorYellow},
+    {"blue", ColorBlue},
+    {"magneta", ColorMagneta},
+    {"cyan", ColorCyan},
+    {"light gray", ColorLightGray},
+    {"default", ColorDefault}
 };
 
-struct Decoration {
+struct decoration {
     const char *prefix;
     size_t prefixLength;
     const char *suffix;
@@ -42,29 +42,30 @@ struct Decoration {
 };
 
 MODULE_PRIVATE
-int loadConfig(struct Module *module, const struct Config *cfg, const char *section) {
-    struct Decoration *decoration = (struct Decoration *)module->privateData;
+int loadConfig(struct module *module, const struct config *cfg, const char *section)
+{
+    struct decoration *decoration = (struct decoration *)module->privateData;
     if (!decoration) {
-        LOG(L_ERROR, "Corrupted module");
+        LOG(LError, "Corrupted module");
         return -1;
     }
 
     int rv;
     const char *color;
-    if ((rv = configValue(cfg, section, "Color", CFG_STRING, &color))) {
-        LOG(L_WARN, "Could not read value Color, using default = default");
+    if ((rv = configValue(cfg, section, "Color", CfgString, &color))) {
+        LOG(LWarn, "Could not read value Color, using default = default");
         color = "default";
     }
 
     int bold;
-    if ((rv = configValue(cfg, section, "Bold", CFG_BOOL, &bold))) {
-        LOG(L_WARN, "Could not read value Bold, using default = false");
+    if ((rv = configValue(cfg, section, "Bold", CfgBool, &bold))) {
+        LOG(LWarn, "Could not read value Bold, using default = false");
         bold = 1;
     }
 
     int underline;
-    if ((rv = configValue(cfg, section, "Underline", CFG_BOOL, &underline))) {
-        LOG(L_WARN, "Could not read value Underline, using default = false");
+    if ((rv = configValue(cfg, section, "Underline", CfgBool, &underline))) {
+        LOG(LWarn, "Could not read value Underline, using default = false");
         underline = 1;
     }
 
@@ -76,13 +77,13 @@ int loadConfig(struct Module *module, const struct Config *cfg, const char *sect
         }
     }
     if (!colorCode) {
-        LOG(L_WARN, "Requested color '%s' is not available, using color = default", color);
-        colorCode = COLOR_DEFAULT;
+        LOG(LWarn, "Requested color '%s' is not available, using color = default", color);
+        colorCode = ColorDefault;
     }
     size_t maxPrefixLength = strlen("\x1B[1;4;xxm") + 1;
     char *prefix = (char *)malloc(maxPrefixLength);
     if (!prefix) {
-        LOG(L_FATAL, "Allocation failed (%zu bytes)", maxPrefixLength);
+        LOG(LFatal, "Allocation failed (%zu bytes)", maxPrefixLength);
         return -1;
     }
     sprintf(prefix, "\x1B[%s%s%dm",
@@ -95,24 +96,26 @@ int loadConfig(struct Module *module, const struct Config *cfg, const char *sect
     decoration->suffix = "\x1B[0m";
     decoration->suffixLength = strlen(decoration->suffix);
 
-    LOG(L_DEBUG, "decoration refix: %s", decoration->prefix);
-    LOG(L_DEBUG, "decoration suffix: %s", decoration->suffix);
+    LOG(LDebug, "decoration refix: %s", decoration->prefix);
+    LOG(LDebug, "decoration suffix: %s", decoration->suffix);
     return 0;
 }
 
 MODULE_PRIVATE
-void responseCleanup(struct Query *query) {
+void responseCleanup(struct query *query)
+{
     free(query->response);
     query->response = NULL;
     query->responseLength = 0;
 }
 
 MODULE_PRIVATE
-void decorate(struct Module *module, struct Query *query, int postProcess) {
-    LOG(L_DEBUG, "executed");
-    struct Decoration *decoration = (struct Decoration *)module->privateData;
+void decorate(struct module *module, struct query *query, int postProcess)
+{
+    LOG(LDebug, "executed");
+    struct decoration *decoration = (struct decoration *)module->privateData;
     if (!decoration) {
-        query->responseCode = RC_ERROR;
+        query->responseCode = RCError;
         return;
     }
 
@@ -129,8 +132,8 @@ void decorate(struct Module *module, struct Query *query, int postProcess) {
                           + 1;
     char *output = (char *) malloc(responseLength);
     if (!output) {
-        LOG(L_FATAL, "Allocation failed (%zu bytes)", responseLength);
-        query->responseCode = RC_ERROR;
+        LOG(LFatal, "Allocation failed (%zu bytes)", responseLength);
+        query->responseCode = RCError;
         return;
     }
     char *p = output;
@@ -140,44 +143,50 @@ void decorate(struct Module *module, struct Query *query, int postProcess) {
     p += length;
     strcpy(p, decoration->suffix);
 
-    if (query->responseCleanup)
+    if (query->responseCleanup) {
         query->responseCleanup(query);
+    }
     query->response = output;
     query->responseLength = responseLength;
     query->responseCleanup = responseCleanup;
 
-    LOG(L_DEBUG, "finite");
+    LOG(LDebug, "finite");
 
-    query->responseCode = RC_SUCCESS;
+    query->responseCode = RCSuccess;
 }
 
 MODULE_PRIVATE
-void process(struct Module *module, struct Query *query) {
+void process(struct module *module, struct query *query)
+{
     decorate(module, query, 0);
 }
 
 MODULE_PRIVATE
-void postProcess(struct Module *module, struct Query *query) {
+void postProcess(struct module *module, struct query *query)
+{
     decorate(module, query, 1);
 }
 
 MODULE_PRIVATE
-void cleanup(struct Module *module) {
-    if (!module)
+void cleanup(struct module *module)
+{
+    if (!module) {
         return;
-    struct Decoration *decoration = (struct Decoration *)module->privateData;
-    if (!decoration)
+    }
+    struct decoration *decoration = (struct decoration *)module->privateData;
+    if (!decoration) {
         return;
+    }
     free((char *)decoration->prefix);
     free(decoration);
 }
 
 
-void moduleDecorate(struct Module *module) {
-    memset(module, 0, sizeof(struct Module));
-    struct Decoration *decoration = (struct Decoration *)malloc(sizeof(struct Decoration));
+void moduleDecorate(struct module *module) {
+    memset(module, 0, sizeof(struct module));
+    struct decoration *decoration = (struct decoration *)malloc(sizeof(struct decoration));
     if (!decoration) {
-        LOG(L_FATAL, "Allocation failed (%zu bytes)", sizeof(struct Decoration));
+        LOG(LFatal, "Allocation failed (%zu bytes)", sizeof(struct decoration));
         return;
     }
 

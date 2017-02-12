@@ -6,26 +6,28 @@
 #include "module-toupper.h"
 
 MODULE_PRIVATE
-void responseCleanup(struct Query *query) {
+void responseCleanup(struct query *query)
+{
     free(query->response);
     query->response = NULL;
     query->responseLength = 0;
 }
 
 MODULE_PRIVATE
-void process(struct Module *module, struct Query *query) {
+void process(struct module *module, struct query *query)
+{
     (void)module;
 
     if (!query->query || !query->queryLength) {
-        query->responseCode = RC_INVALID_INPUT;
+        query->responseCode = RCInvalidInput;
         return;
     }
 
     query->responseLength = query->queryLength;
     query->response = (char *)malloc(query->responseLength + 1);
     if (!query->response) {
-        LOG(L_FATAL, "Allocation failed (%zu bytes)", query->responseLength + 1);
-        query->responseCode = RC_ERROR;
+        LOG(LFatal, "Allocation failed (%zu bytes)", query->responseLength + 1);
+        query->responseCode = RCError;
         return;
     }
 
@@ -36,10 +38,11 @@ void process(struct Module *module, struct Query *query) {
         *out = toupper(*in);
     }
     *out = '\0';
-    query->responseCode = RC_SUCCESS;
+    query->responseCode = RCSuccess;
 }
 
-void moduleToUpper(struct Module *module) {
+void moduleToUpper(struct module *module)
+{
     module->privateData = NULL;
     module->name = "toupper";
     module->loadConfig = NULL;

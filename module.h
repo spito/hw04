@@ -8,7 +8,7 @@
 
 #define MODULE_PRIVATE static
 
-struct Module {
+struct module {
 
     void *privateData;
     const char *name;

@@ -5,28 +5,25 @@
 
 #include "functions.h"
 
-enum ResponseCode {
-    RC_ERROR,
-    RC_CONTINUE,
-    RC_SUCCESS,
-    RC_NO_RESPONSE,
-    RC_INVALID_INPUT
+enum responseCode {
+    RCError,
+    RCContinue,
+    RCSuccess,
+    RCNoResponse,
+    RCInvalidInput
 };
 
-struct Query {
-
+struct query {
     const char *query;
     size_t queryLength;
     queryCleanupFn queryCleanup;
 
     char *response;
     size_t responseLength;
-    enum ResponseCode responseCode;
+    enum responseCode responseCode;
     queryCleanupFn responseCleanup;
-
-
 };
 
-void initQuery(struct Query *);
+void initQuery(struct query *);
 
 #endif

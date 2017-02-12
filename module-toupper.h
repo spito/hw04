@@ -3,6 +3,6 @@
 
 #include "module.h"
 
-void moduleToUpper(struct Module *);
+void moduleToUpper(struct module *);
 
 #endif

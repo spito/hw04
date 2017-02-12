@@ -3,6 +3,6 @@
 
 #include "module.h"
 
-void moduleDecorate(struct Module *);
+void moduleDecorate(struct module *);
 
 #endif

@@ -1,17 +1,17 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-enum ConfigValueType {
+enum configValueType {
     // From the first non-white character up to the last one on the line.
-    CFG_STRING,
+    CfgString,
     // Only valid number can be condidered. 
-    CFG_INTEGER,
+    CfgInteger,
     // All of {1, "true", "yes"} should be accepted as true.
     // All of {0, "false", "no"} should be accepted as false.
-    CFG_BOOL
+    CfgBool
 };
 
-struct Config {
+struct config {
     /// TODO: implement
 };
 
@@ -23,7 +23,7 @@ struct Config {
  *          1 in case the file cannot be opened
  *          2 in case the format of the config file is wrong
  */
-int configReader(struct Config *cfg, const char *name); 
+int configReader(struct config *cfg, const char *name); 
 
 /** Get the config value
  *
@@ -37,16 +37,16 @@ int configReader(struct Config *cfg, const char *name);
  *          2 in case the key is not found
  *          3 in case the value cannot be converted into the desired type
  */
-int configValue(const struct Config *cfg,
+int configValue(const struct config *cfg,
                 const char *section,
                 const char *key,
-                enum ConfigValueType type,
+                enum configValueType type,
                 void *value);
 
 /** Release all resources hold by Config structure. 
  *
  *  @param cfg The config structure.
  */
-void configCleaner(struct Config *cfg);
+void configCleaner(struct config *cfg);
 
 #endif

@@ -7,70 +7,73 @@
 #include "config.h"
 
 
-struct CacheItem {
+struct cacheItem {
     char *key;
     size_t keyLengh;
     char *response;
     size_t responseLength;
     enum ResponseCode responseCode;
     time_t timeOfDeath;
-    struct CacheItem *next;
+    struct cacheItem *next;
 };
 
-struct Bucket {
-    struct CacheItem *first;
-    struct CacheItem *last;
+struct bucket {
+    struct cacheItem *first;
+    struct cacheItem *last;
 };
 
-struct Cache {
-    struct Bucket *buckets;
+struct cache {
+    struct bucket *buckets;
     size_t bucketCount;
     int timeout;
 };
 
 MODULE_PRIVATE
-void responseCleanup(struct Query *query) {
+void responseCleanup(struct query *query)
+{
     free(query->response);
     query->response = NULL;
     query->responseLength = 0;
 }
 
 MODULE_PRIVATE
-int loadConfig(struct Module *module, const struct Config *cfg, const char *section) {
-
-    struct Cache *cache = (struct Cache *)module->privateData;
+int loadConfig(struct module *module, const struct config *cfg, const char *section)
+{
+    struct cache *cache = (struct cache *)module->privateData;
     if (!cache) {
-        LOG(L_ERROR, "Corrupted module");
+        LOG(LError, "Corrupted module");
         return -1;
     }
 
     int rv;
-    if ((rv = configValue(cfg, section, "Timeout", CFG_INTEGER, &cache->timeout))) {
-        LOG(L_WARN, "Could not read value Timeout, using default = 2");
+    if ((rv = configValue(cfg, section, "Timeout", CfgInteger, &cache->timeout))) {
+        LOG(LWarn, "Could not read value Timeout, using default = 2");
         cache->timeout = 2;
     }
 
     int bucketCount;
-    if ((rv = configValue(cfg, section, "BucketCount", CFG_INTEGER, &bucketCount))) {
-        LOG(L_WARN, "Could not read value BucketCount, using default = 32");
+    if ((rv = configValue(cfg, section, "BucketCount", CfgInteger, &bucketCount))) {
+        LOG(LWarn, "Could not read value BucketCount, using default = 32");
         bucketCount = 32;
     }
 
-    if (bucketCount < 0)
+    if (bucketCount < 0) {
         return 3;
+    }
     cache->bucketCount = bucketCount;
-    cache->buckets = (struct Bucket *)malloc(cache->bucketCount * sizeof(struct Bucket));
+    cache->buckets = (struct bucket *)malloc(cache->bucketCount * sizeof(struct bucket));
     if (!cache->buckets) {
-        LOG(L_FATAL, "Allocation failed (%zu bytes)", cache->bucketCount * sizeof(struct Bucket));
+        LOG(LFatal, "Allocation failed (%zu bytes)", cache->bucketCount * sizeof(struct bucket));
         return -1;
     }
 
-    memset(cache->buckets, 0, cache->bucketCount * sizeof(struct Bucket));
+    memset(cache->buckets, 0, cache->bucketCount * sizeof(struct bucket));
     return 0;
 }
 
 MODULE_PRIVATE
-size_t hash(const char *key) {
+size_t hash(const char *key)
+{
     const size_t base = 31;
     size_t h = 0;
     for (size_t coef = 1; *key; ++key) {
@@ -81,14 +84,15 @@ size_t hash(const char *key) {
 }
 
 MODULE_PRIVATE
-struct CacheItem *find(struct Cache *cache, const char *key) {
+struct cacheItem *find(struct cache *cache, const char *key)
+{
     size_t bucketId = hash(key) % cache->bucketCount;
     time_t now = time(NULL);
 
-    struct CacheItem **item = &cache->buckets[bucketId].first; 
+    struct cacheItem **item = &cache->buckets[bucketId].first; 
     while (*item) {
         if ((*item)->timeOfDeath < now) {
-            struct CacheItem *toBeFreed = *item;
+            struct cacheItem *toBeFreed = *item;
             *item = (*item)->next;
             free(toBeFreed->key);
             free(toBeFreed->response);
@@ -100,29 +104,31 @@ struct CacheItem *find(struct Cache *cache, const char *key) {
         }
         item = &(*item)->next;
     }
-    if (!cache->buckets[bucketId].first)
+    if (!cache->buckets[bucketId].first) {
         cache->buckets[bucketId].last = NULL;
+    }
     return NULL;
 }
 
 MODULE_PRIVATE
-void process(struct Module *module, struct Query *query) {
-    struct Cache *cache = (struct Cache *)module->privateData;
+void process(struct module *module, struct query *query)
+{
+    struct cache *cache = (struct cache *)module->privateData;
     if (!cache) {
-        query->responseCode = RC_ERROR;
+        query->responseCode = RCError;
         return;
     }
 
-    struct CacheItem *item = find(cache, query->query);
+    struct cacheItem *item = find(cache, query->query);
     if (!item) {
-        query->responseCode = RC_CONTINUE;
+        query->responseCode = RCContinue;
         return;
     }
 
     query->response = (char *)malloc(item->responseLength + 1);
     if (!query->response) {
-        LOG(L_FATAL, "Allocation failed (%zu bytes)", item->responseLength + 1);
-        query->responseCode = RC_ERROR;
+        LOG(LFatal, "Allocation failed (%zu bytes)", item->responseLength + 1);
+        query->responseCode = RCError;
         return;
     }
     strcpy(query->response, item->response);
@@ -132,42 +138,44 @@ void process(struct Module *module, struct Query *query) {
 }
 
 MODULE_PRIVATE
-void postProcess(struct Module *module, struct Query *query) {
-    struct Cache *cache = (struct Cache *)module->privateData;
+void postProcess(struct module *module, struct query *query)
+{
+    struct cache *cache = (struct cache *)module->privateData;
     if (!cache) {
-        query->responseCode = RC_ERROR;
+        query->responseCode = RCError;
         return;
     }
-    struct CacheItem *item = find(cache, query->query);
+    struct cacheItem *item = find(cache, query->query);
 
     if (!item) {
         size_t bucketId = hash(query->query) % cache->bucketCount;
         time_t now = time(NULL);
 
-        struct CacheItem *newItem = (struct CacheItem *)malloc(sizeof(struct CacheItem));
+        struct cacheItem *newItem = (struct cacheItem *)malloc(sizeof(struct cacheItem));
         if (!newItem) {
-            LOG(L_FATAL, "Allocation failed (%zu bytes)", sizeof(struct CacheItem));
+            LOG(LFatal, "Allocation failed (%zu bytes)", sizeof(struct cacheItem));
             return;
         }
         newItem->key = (char *)malloc(query->queryLength + 1);
         if (!newItem->key) {
-            LOG(L_FATAL, "Allocation failed (%zu bytes)", query->queryLength + 1);
+            LOG(LFatal, "Allocation failed (%zu bytes)", query->queryLength + 1);
             free(newItem);
             return;
         }
         newItem->response = (char *)malloc(query->responseLength + 1);
         if (!newItem->response) {
-            LOG(L_FATAL, "Allocation failed (%zu bytes)", query->responseLength + 1);
+            LOG(LFatal, "Allocation failed (%zu bytes)", query->responseLength + 1);
             free(newItem->key);
             free(newItem);
             return;
         }
         strcpy(newItem->key, query->query);
         newItem->keyLengh = query->queryLength;
-        if (query->response)
+        if (query->response) {
             strcpy(newItem->response, query->response);
-        else
+        } else {
             newItem->response[0] = '\0';
+        }
         newItem->responseLength = query->responseLength;
         newItem->responseCode = query->responseCode;
         newItem->timeOfDeath = now + cache->timeout;
@@ -181,16 +189,19 @@ void postProcess(struct Module *module, struct Query *query) {
 
 
 MODULE_PRIVATE
-void cleanup(struct Module *module) {
-    if (!module)
+void cleanup(struct module *module)
+{
+    if (!module) {
         return;
-    struct Cache *cache = (struct Cache *)module->privateData;
-    if (!cache)
+    }
+    struct cache *cache = (struct cache *)module->privateData;
+    if (!cache) {
         return;
+    }
 
     for (size_t i = 0; i != cache->bucketCount; ++i) {
         while (cache->buckets[i].first) {
-            struct CacheItem *item = cache->buckets[i].first;
+            struct cacheItem *item = cache->buckets[i].first;
             cache->buckets[i].first = item->next;
 
             free(item->key);
@@ -202,11 +213,12 @@ void cleanup(struct Module *module) {
     free(cache);
 }
 
-void moduleCache(struct Module *module) {
-    memset(module, 0, sizeof(struct Module));
-    struct Cache *cache = (struct Cache *)malloc(sizeof(struct Cache));
+void moduleCache(struct module *module)
+{
+    memset(module, 0, sizeof(struct module));
+    struct cache *cache = (struct cache *)malloc(sizeof(struct cache));
     if (!cache) {
-        LOG(L_FATAL, "Allocation failed (%zu bytes)", sizeof(struct Cache));
+        LOG(LFatal, "Allocation failed (%zu bytes)", sizeof(struct cache));
         return;
     }
 
