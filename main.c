@@ -104,7 +104,7 @@ int loadConfig(const char *configFile,
                int modulesCount)
 {
     struct config cfg;
-    int rv = configReader(&cfg, configFile);
+    int rv = configRead(&cfg, configFile);
     if (rv) {
         switch (rv) {
         case 1:
@@ -114,6 +114,7 @@ int loadConfig(const char *configFile,
             LOG(LError, "Config file '%s' is corrupted", configFile);
             break;
         }
+        configClean(&cfg);
         return rv;
     }
 
@@ -131,6 +132,7 @@ int loadConfig(const char *configFile,
             LOG(LWarn, "Config loading failed (module: '%s', rv: %i)", modules[m].name, rv);
         }
     }
+    configClean(&cfg);
     return 0;
 }
 

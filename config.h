@@ -23,7 +23,7 @@ struct config {
  *          1 in case the file cannot be opened
  *          2 in case the format of the config file is wrong
  */
-int configReader(struct config *cfg, const char *name); 
+int configRead(struct config *cfg, const char *name); 
 
 /** Get the config value
  *
@@ -47,6 +47,6 @@ int configValue(const struct config *cfg,
  *
  *  @param cfg The config structure.
  */
-void configCleaner(struct config *cfg);
+void configClean(struct config *cfg);
 
 #endif

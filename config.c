@@ -1,6 +1,6 @@
 #include "config.h"
 
-int configReader(struct config *cfg, const char *name)
+int configRead(struct config *cfg, const char *name)
 {
     /// TODO: implement
     return 0;
@@ -18,7 +18,7 @@ int configValue(const struct config *cfg,
 }
 
 
-void configCleaner(struct config *cfg)
+void configClean(struct config *cfg)
 {
     /// TODO: implement
 }
