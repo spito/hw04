@@ -182,7 +182,8 @@ void cleanup(struct module *module)
 }
 
 
-void moduleDecorate(struct module *module) {
+void moduleDecorate(struct module *module)
+{
     memset(module, 0, sizeof(struct module));
     struct decoration *decoration = (struct decoration *)malloc(sizeof(struct decoration));
     if (!decoration) {

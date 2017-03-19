@@ -7,7 +7,9 @@
 #include "config.h"
 #include "module-cache.h"
 #include "module-toupper.h"
+#include "module-tolower.h"
 #include "module-decorate.h"
+#include "module-magic.h"
 
 
 void process(const char *queryText, struct module *modules, int modulesCount) {
@@ -105,17 +107,15 @@ int loadConfig(const char *configFile,
 {
     struct config cfg;
     int rv = configRead(&cfg, configFile);
-    if (rv) {
-        switch (rv) {
-        case 1:
-            LOG(LError, "Config file '%s' cannot be opened", configFile);
-            break;
-        case 2:
-            LOG(LError, "Config file '%s' is corrupted", configFile);
-            break;
-        }
-        configClean(&cfg);
-        return rv;
+    switch (rv) {
+    case 0:
+        break;
+    case 1:
+        LOG(LError, "Config file '%s' cannot be opened", configFile);
+        break;
+    case 2:
+        LOG(LError, "Config file '%s' is corrupted", configFile);
+        break;
     }
 
     setLogSetting(&cfg);
@@ -175,19 +175,30 @@ int main(int argc, char **argv)
     const char *configFile = "server.conf";
     int rv;
 
-    int modulesCount = 3;
+    int modulesCount = 5;
 
-    struct module modules[3];
+    struct module modules[5];
     moduleCache(&modules[0]);
     moduleToUpper(&modules[1]);
     moduleDecorate(&modules[2]);
-    //moduleToLower(&modules[2]);
+    moduleToLower(&modules[3]);
+    moduleMagic(&modules[4]);
 
     if ((rv = loadConfig(configFile, modules, modulesCount))) {
-        return rv;
+        if (rv == 1)
+            LOG(LWarn, "config file %s is missing", configFile);
+        else
+            return rv;
     }
 
-    processFile(argv[1], modules, modulesCount);
+    struct module selectedModules[] = {
+        modules[0],
+        modules[1],
+        modules[2]
+    };
+    int selectedModulesCount = 3;
+
+    processFile(argv[1], selectedModules, selectedModulesCount);
 
     for (int m = 0; m < modulesCount; ++m) {
         if (modules[m].cleanup) {

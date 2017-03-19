@@ -1,5 +1,5 @@
-#ifndef MODULE_TOUPPER_H
-#define MODULE_TOUPPER_H
+#ifndef MODULE_TOLOWER_H
+#define MODULE_TOLOWER_H
 
 #include "module.h"
 

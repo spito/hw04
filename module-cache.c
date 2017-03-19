@@ -12,7 +12,7 @@ struct cacheItem {
     size_t keyLengh;
     char *response;
     size_t responseLength;
-    enum ResponseCode responseCode;
+    enum responseCode responseCode;
     time_t timeOfDeath;
     struct cacheItem *next;
 };
