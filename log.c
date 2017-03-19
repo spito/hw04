@@ -48,7 +48,7 @@ int logFunction(const char *file,
                 const char *fmt, ...)
 {
     if ((int)code < logMask || code == LNoLog) {
-        return 1;
+        return 0;
     }
     if (!logStream) {
         logStream = stderr;
