@@ -6,6 +6,8 @@
 #include "log.h"
 #include "module-decorate.h"
 
+MODULE_PRIVATE const char *defaultPrefix = "\x1B[39m";
+
 enum colors {
     ColorBlack = 30,
     ColorRed = 31,
@@ -60,13 +62,13 @@ int loadConfig(struct module *module, const struct config *cfg, const char *sect
     int bold;
     if ((rv = configValue(cfg, section, "Bold", CfgBool, &bold))) {
         LOG(LWarn, "Could not read value Bold, using default = false");
-        bold = 1;
+        bold = 0;
     }
 
     int underline;
     if ((rv = configValue(cfg, section, "Underline", CfgBool, &underline))) {
         LOG(LWarn, "Could not read value Underline, using default = false");
-        underline = 1;
+        underline = 0;
     }
 
     int colorCode = 0;
@@ -90,14 +92,15 @@ int loadConfig(struct module *module, const struct config *cfg, const char *sect
             bold ? "1;" : "",
             underline ? "4;" : "",
             colorCode);
-    
+
+    if (decoration->prefix) {
+        free((char *)decoration->prefix);
+    }
+
     decoration->prefix = prefix;
     decoration->prefixLength = strlen(decoration->prefix);
-    decoration->suffix = "\x1B[0m";
-    decoration->suffixLength = strlen(decoration->suffix);
 
     LOG(LDebug, "decoration refix: %s", decoration->prefix);
-    LOG(LDebug, "decoration suffix: %s", decoration->suffix);
     return 0;
 }
 
@@ -114,7 +117,7 @@ void decorate(struct module *module, struct query *query, int postProcess)
 {
     LOG(LDebug, "executed");
     struct decoration *decoration = (struct decoration *)module->privateData;
-    if (!decoration) {
+    if (!decoration || !decoration->prefix) {
         query->responseCode = RCError;
         return;
     }
@@ -197,4 +200,16 @@ void moduleDecorate(struct module *module)
     module->process = process;
     module->postProcess = postProcess;
     module->cleanup = cleanup;
+
+    decoration->suffix = "\x1B[0m";
+    decoration->suffixLength = strlen(decoration->suffix);
+    decoration->prefixLength = strlen(defaultPrefix);
+    char *prefix = (char *)malloc(decoration->prefixLength + 1);
+    if (!prefix) {
+        LOG(LFatal, "Allocation failed (%zu bytes)", sizeof(struct decoration));
+        return;
+    }
+    strcpy(prefix, defaultPrefix);
+    decoration->prefix = prefix;
+
 }

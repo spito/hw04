@@ -6,6 +6,10 @@
 #include "module-cache.h"
 #include "config.h"
 
+enum {
+    defaultTimeout = 2,
+    defaultBucketCount = 32
+};
 
 struct cacheItem {
     char *key;
@@ -47,24 +51,26 @@ int loadConfig(struct module *module, const struct config *cfg, const char *sect
 
     int rv;
     if ((rv = configValue(cfg, section, "Timeout", CfgInteger, &cache->timeout))) {
-        LOG(LWarn, "Could not read value Timeout, using default = 2");
-        cache->timeout = 2;
+        LOG(LWarn, "Could not read value Timeout, using default = %d", defaultTimeout);
     }
 
     int bucketCount;
     if ((rv = configValue(cfg, section, "BucketCount", CfgInteger, &bucketCount))) {
-        LOG(LWarn, "Could not read value BucketCount, using default = 32");
-        bucketCount = 32;
+        LOG(LWarn, "Could not read value BucketCount, using default = %d", defaultBucketCount);
+        bucketCount = defaultBucketCount;
     }
 
     if (bucketCount < 0) {
         return 3;
     }
-    cache->bucketCount = bucketCount;
-    cache->buckets = (struct bucket *)malloc(cache->bucketCount * sizeof(struct bucket));
-    if (!cache->buckets) {
-        LOG(LFatal, "Allocation failed (%zu bytes)", cache->bucketCount * sizeof(struct bucket));
-        return -1;
+    if ((size_t)bucketCount != cache->bucketCount || !cache->buckets) {
+        cache->bucketCount = bucketCount;
+        void *buckets = realloc(cache->buckets, cache->bucketCount * sizeof(struct bucket));
+        if (!buckets) {
+            LOG(LFatal, "Allocation failed (%zu bytes)", cache->bucketCount * sizeof(struct bucket));
+            return -1;
+        }
+        cache->buckets = (struct bucket *)buckets;
     }
 
     memset(cache->buckets, 0, cache->bucketCount * sizeof(struct bucket));
@@ -222,13 +228,17 @@ void moduleCache(struct module *module)
         return;
     }
 
-    cache->buckets = NULL;
-    cache->bucketCount = 0;
-
     module->privateData = cache;
     module->name = "cache";
     module->loadConfig = loadConfig;
     module->process = process;
     module->postProcess = postProcess;
     module->cleanup = cleanup;
+
+    cache->timeout = 2;
+    cache->bucketCount = 32;
+    cache->buckets = (struct bucket *)malloc(sizeof(struct bucket) * cache->bucketCount);
+    if (!cache->buckets) {
+        LOG(LFatal, "Allocation failed (%zu bytes)", sizeof(struct bucket) * cache->bucketCount);
+    }
 }
