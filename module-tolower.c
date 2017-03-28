@@ -18,11 +18,6 @@ void process(struct module *module, struct query *query)
 {
     (void)module;
 
-    if (!query->query || !query->queryLength) {
-        query->responseCode = RCInvalidInput;
-        return;
-    }
-
     query->responseLength = query->queryLength;
     query->response = (char *)malloc(query->responseLength + 1);
     if (!query->response) {

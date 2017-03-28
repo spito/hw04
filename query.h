@@ -7,10 +7,8 @@
 
 enum responseCode {
     RCError,
-    RCContinue,
-    RCSuccess,
-    RCNoResponse,
-    RCInvalidInput
+    RCDone,
+    RCSuccess
 };
 
 struct query {

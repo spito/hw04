@@ -4,7 +4,7 @@ MODULE_PRIVATE
 void process(struct module *module, struct query *query)
 {
     (void)module;
-    query->responseCode = RCContinue;
+    query->responseCode = RCSuccess;
 }
 
 void moduleMagic(struct module *module)

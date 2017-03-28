@@ -5,5 +5,5 @@
 void initQuery(struct query *query)
 {
     memset(query, 0, sizeof(struct query));
-    query->responseCode = RCNoResponse;
+    query->responseCode = RCSuccess;
 }

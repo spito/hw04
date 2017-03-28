@@ -100,7 +100,7 @@ int loadConfig(struct module *module, const struct config *cfg, const char *sect
     decoration->prefix = prefix;
     decoration->prefixLength = strlen(decoration->prefix);
 
-    LOG(LDebug, "decoration refix: %s", decoration->prefix);
+    LOG(LDebug, "decoration prefix: %s", decoration->prefix);
     return 0;
 }
 

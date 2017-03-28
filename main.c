@@ -19,6 +19,8 @@ void process(const char *queryText, struct module *modules, int modulesCount) {
     query.query = queryText;
     query.queryLength = strlen(queryText);
     query.queryCleanup = NULL;
+    query.response = "";
+    query.responseCleanup = NULL;
 
     LOG(LInfo, "query: %s", queryText);
 
@@ -27,33 +29,22 @@ void process(const char *queryText, struct module *modules, int modulesCount) {
         LOG(LDebug, "Running module %s", modules[m].name);
         modules[m].process(&modules[m], &query);
 
-        int leave = 0;
         switch (query.responseCode) {
         case RCSuccess:
             LOG(LInfo, "Response success");
-            leave = 1;
-            break;
-        case RCContinue:
-            LOG(LInfo, "Response continue");
             continue;
-        case RCInvalidInput:
-            LOG(LWarn, "Response invalid input");
-            leave = 1;
+        case RCDone:
+            LOG(LInfo, "Response done");
             break;
-        case RCNoResponse:
-            LOG(LWarn, "No response");
-            continue;
         case RCError:
         default:
             LOG(LError, "Error");
-            leave = 1;
             break;
         }
-        if (leave)
-            break;
+        break;
     }
     LOG(LDebug, "responseCode: %i", query.responseCode);
-    if (query.responseCode == RCSuccess || query.responseCode == RCNoResponse) {
+    if (query.responseCode == RCSuccess) {
         m = modulesCount;
         while (--m >= 0) {
             if (modules[m].postProcess) {

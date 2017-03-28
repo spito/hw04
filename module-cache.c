@@ -127,7 +127,7 @@ void process(struct module *module, struct query *query)
 
     struct cacheItem *item = find(cache, query->query);
     if (!item) {
-        query->responseCode = RCContinue;
+        query->responseCode = RCSuccess;
         return;
     }
 
@@ -138,7 +138,7 @@ void process(struct module *module, struct query *query)
         return;
     }
     strcpy(query->response, item->response);
-    query->responseCode = item->responseCode;
+    query->responseCode = RCDone;
     query->responseLength = item->responseLength;
     query->responseCleanup = responseCleanup;
 }
