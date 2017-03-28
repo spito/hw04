@@ -241,4 +241,5 @@ void moduleCache(struct module *module)
     if (!cache->buckets) {
         LOG(LFatal, "Allocation failed (%zu bytes)", sizeof(struct bucket) * cache->bucketCount);
     }
+    memset(cache->buckets, 0, cache->bucketCount * sizeof(struct bucket));
 }
