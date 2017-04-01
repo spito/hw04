@@ -87,8 +87,9 @@ void setLogSetting(const struct config *cfg)
             setLogMask(LFatal);
         } else if (!strcmp(logMask, "N") || !strcmp(logMask, "n")) {
             setLogMask(LNoLog);
-        } else
+        } else {
             LOG(LWarn, "Invalid value for Mask: '%s'", logMask);
+        }
     }
 }
 
@@ -153,18 +154,12 @@ void processFile(const char *file,
 
 int main(int argc, char **argv)
 {
-    setLogMask(LDebug);
-    setLogFile("server.log");
-    LOG(LInfo, "Start");
-
     if (argc < 2) {
         LOG(LError, "Cannot run without input file name");
-        fprintf(stderr, "Cannot run without input file name\n");
         return 6;
     }
 
     const char *configFile = "server.conf";
-    int rv;
 
     int modulesCount = 5;
 
@@ -175,12 +170,14 @@ int main(int argc, char **argv)
     moduleToLower(&modules[3]);
     moduleMagic(&modules[4]);
 
+    int rv;
     if ((rv = loadConfig(configFile, modules, modulesCount))) {
         if (rv == 1)
             LOG(LWarn, "config file %s is missing", configFile);
         else
             return rv;
     }
+    LOG(LInfo, "Start");
 
     struct module selectedModules[] = {
         modules[0],
@@ -197,6 +194,6 @@ int main(int argc, char **argv)
         }
     }
 
-    LOG(LInfo, "Quit");
+    LOG(LInfo, "Finished");
     return 0;
 }

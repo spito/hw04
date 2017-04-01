@@ -76,7 +76,7 @@ int logFunction(const char *file,
     case LWarn:    kind = "W"; break;
     case LError:   kind = "E"; break;
     case LFatal:   kind = "F"; break;
-    default:        kind = "?"; break;
+    default:       kind = "?"; break;
     }
 
     return fprintf(logStream,
